@@ -78,23 +78,28 @@ chrome.runtime.sendMessage({ action: 'getKeys' }, (keys) => {
     }
 
     if (key === bestKey) {
-      const board = extractBoardFromUrl(location.href);
-      if (board) location.href = `https://arca.live/b/${board}?mode=best`;
-      return;
+  const board = extractBoardFromUrl(location.href);
+  if (board) {
+    const isBest = location.href.includes("mode=best");
+    location.href = isBest
+      ? `https://arca.live/b/${board}`
+      : `https://arca.live/b/${board}?mode=best`;
+  }
+  return;
     }
 
     if (key === prevPageKey || key === nextPageKey) {
       const currentPage = getCurrentPage();
       const newPage = key === prevPageKey ? currentPage - 1 : currentPage + 1;
-      if (location.href.match(/\/b\/[^/]+\/\d+/)) {
-        const board = extractBoardFromUrl(location.href);
-        if (board && newPage >= 1) {
+      const board = extractBoardFromUrl(location.href);
+      const isViewingPost = /\/b\/[^/]+\/\d+/.test(location.pathname);
+
+      if (board && newPage >= 1) {
+        if (isViewingPost) {
           location.href = `https://arca.live/b/${board}?p=${newPage}`;
+        } else {
+          location.href = updatePageParam(location.href, newPage);
         }
-        return;
-      }
-      if (newPage >= 1) {
-        location.href = updatePageParam(location.href, newPage);
       }
       return;
     }
