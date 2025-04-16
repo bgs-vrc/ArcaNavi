@@ -1,0 +1,77 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>ArcaNavi</title>
+  <link rel="stylesheet" href="default.css">
+  <script defer src="default.js"></script>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <img src="img/icon48.png" alt="ArcaNavi Logo" class="logo">
+      <h1>ArcaNavi</h1>
+    </div>
+
+    <h2>현재 단축키 설정</h2>
+
+    <div class="content">
+      <!-- 왼쪽 그룹 -->
+      <div class="key-group">
+        <div class="shortcut-row">
+          <span>이전 글:</span>
+          <input type="text" id="prevKeyInput" disabled />
+        </div>
+        <div class="shortcut-row">
+          <span>다음 글:</span>
+          <input type="text" id="nextKeyInput" disabled />
+        </div>
+        <div class="shortcut-row">
+          <span>이전 페이지:</span>
+          <input type="text" id="prevPageKeyInput" disabled />
+        </div>
+        <div class="shortcut-row">
+          <span>다음 페이지:</span>
+          <input type="text" id="nextPageKeyInput" disabled />
+        </div>
+        <div class="shortcut-row">
+          <span>맨 위로 이동:</span>
+          <input type="text" id="scrollTopKeyInput" disabled />
+        </div>
+      </div>
+
+      <!-- 오른쪽 그룹 -->
+      <div class="key-group">
+        <div class="shortcut-row">
+          <span>글쓰기:</span>
+          <input type="text" id="writeKeyInput" disabled />
+        </div>
+        <div class="alt-hint">Alt + 해당 키 → 글작성 완료</div>
+
+        <div class="shortcut-row">
+          <span>댓글 입력:</span>
+          <input type="text" id="commentKeyInput" disabled />
+        </div>
+        <div class="alt-hint">Alt + 해당 키 → 댓글 작성</div>
+
+        <div class="shortcut-row">
+          <span>추천:</span>
+          <input type="text" id="likeKeyInput" disabled />
+        </div>
+        <div class="shortcut-row">
+          <span>비추천:</span>
+          <input type="text" id="dislikeKeyInput" disabled />
+        </div>
+        <div class="shortcut-row">
+          <span>개념글:</span>
+          <input type="text" id="bestKeyInput" disabled />
+        </div>
+      </div>
+    </div>
+
+    <div class="button-row">
+      <button id="editButton">단축키 수정</button>
+    </div>
+  </div>
+</body>
+</html>

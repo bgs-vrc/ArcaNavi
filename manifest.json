@@ -1,0 +1,35 @@
+{
+  "manifest_version": 3,
+  "name": "ArcaNavi",
+  "version": "1.0.1",
+  "description": "아카라이브에서 키보드 단축키로 빠르게 게시글을 탐색할 수 있는 크롬 확장 프로그램",
+  "icons": {
+    "16": "img/icon16.png",
+    "32": "img/icon32.png",
+    "48": "img/icon48.png",
+    "96": "img/icon96.png",
+    "128": "img/icon128.png",
+    "512": "img/icon512.png"
+  },
+  "permissions": [
+    "storage"
+  ],
+  "action": {
+    "default_popup": "default.html",
+    "default_icon": {
+      "16": "img/icon16.png",
+      "48": "img/icon48.png",
+      "128": "img/icon128.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://arca.live/b/*"],
+      "js": ["start.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

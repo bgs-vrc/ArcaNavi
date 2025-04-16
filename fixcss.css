@@ -1,0 +1,7 @@
+.gall_tit a {
+    text-overflow: clip!important;
+}
+
+.block-disable {
+    display: none;
+}
