@@ -1,4 +1,8 @@
+let isEnabled = true;
+
 chrome.runtime.sendMessage({ action: 'getKeys' }, (keys) => {
+  isEnabled = keys.enabled !== false;
+
   const prevKey = keys.prevKey?.toLowerCase() || 'z';
   const nextKey = keys.nextKey?.toLowerCase() || 'x';
   const prevPageKey = keys.prevPageKey?.toLowerCase() || 'a';
@@ -11,6 +15,8 @@ chrome.runtime.sendMessage({ action: 'getKeys' }, (keys) => {
   const bestKey = keys.bestKey?.toLowerCase() || 'd';
 
   document.addEventListener('keydown', async (event) => {
+    if (!isEnabled) return;
+
     const key = event.key.toLowerCase();
     const tag = event.target.tagName.toLowerCase();
     const active = document.activeElement;
@@ -78,14 +84,21 @@ chrome.runtime.sendMessage({ action: 'getKeys' }, (keys) => {
     }
 
     if (key === bestKey) {
-  const board = extractBoardFromUrl(location.href);
-  if (board) {
-    const isBest = location.href.includes("mode=best");
-    location.href = isBest
-      ? `https://arca.live/b/${board}`
-      : `https://arca.live/b/${board}?mode=best`;
-  }
-  return;
+      const board = extractBoardFromUrl(location.href);
+      if (!board) return;
+
+      const url = new URL(location.href);
+      const isBest = url.searchParams.get('mode') === 'best';
+
+      if (isBest) {
+        url.pathname = `/b/${board}`;
+        url.searchParams.delete('mode');
+        url.hash = '';
+        location.href = url.toString();
+      } else {
+        location.href = `https://arca.live/b/${board}?mode=best`;
+      }
+      return;
     }
 
     if (key === prevPageKey || key === nextPageKey) {
@@ -126,7 +139,7 @@ chrome.runtime.sendMessage({ action: 'getKeys' }, (keys) => {
         }
       };
 
-      const isDeleted = href => href && href.includes("#c_");
+      const isDeleted = href => href && href.includes('#c_');
 
       if (key === prevKey) {
         for (let i = currentIndex - 1; i >= 0; i--) {
@@ -136,14 +149,20 @@ chrome.runtime.sendMessage({ action: 'getKeys' }, (keys) => {
             break;
           }
         }
-        if (!targetHref && location.href.match(/\/b\/[^/]+\/\d+/)) {
-          const board = extractBoardFromUrl(location.href);
-          if (board) location.href = `https://arca.live/b/${board}?p=1`;
-          return;
-        }
-        if (!targetHref && getCurrentPage() > 1) {
-          location.href = updatePageParam(location.href, getCurrentPage() - 1) + '#last';
-          return;
+
+        if (!targetHref) {
+          const currentPage = getCurrentPage();
+          if (currentPage > 1) {
+            location.href = updatePageParam(location.href, currentPage - 1) + '#last';
+            return;
+          } else {
+            const isViewingPost = /\/b\/[^/]+\/\d+/.test(location.pathname);
+            if (isViewingPost) {
+              const board = extractBoardFromUrl(location.href);
+              if (board) location.href = `https://arca.live/b/${board}?p=1`;
+              return;
+            }
+          }
         }
       }
 
@@ -155,6 +174,7 @@ chrome.runtime.sendMessage({ action: 'getKeys' }, (keys) => {
             break;
           }
         }
+
         if (!targetHref) {
           const nextPage = getCurrentPage() + 1;
           location.href = updatePageParam(location.href, nextPage) + '#first';
@@ -173,7 +193,59 @@ chrome.runtime.sendMessage({ action: 'getKeys' }, (keys) => {
     const titleInput = document.getElementById('inputTitle');
     if (titleInput) titleInput.focus();
   }
+
+  handleHashNavigation();
 });
+
+// 실시간 상태 변경 감지
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area === 'sync' && 'enabled' in changes) {
+    isEnabled = changes.enabled.newValue !== false;
+  }
+});
+
+function handleHashNavigation() {
+  if (!isEnabled) return;
+  const hash = location.hash;
+  if (!hash || (!hash.includes('#first') && !hash.includes('#last'))) return;
+
+  const rows = Array.from(document.querySelectorAll('.vrow.column, .vrow.hybrid'));
+  const filteredRows = rows.filter(row => {
+    const cls = row.className;
+    return !cls.includes('notice') && !cls.includes('filtered') && !cls.includes('notice-unfilter');
+  });
+
+  const getHref = (row) => {
+    if (row.matches('a.vrow.column')) {
+      return row.getAttribute('href');
+    } else {
+      const link = row.querySelector('.vrow-inner a.hybrid-bottom');
+      return link?.getAttribute('href') || null;
+    }
+  };
+
+  const isDeleted = href => href && href.includes('#c_');
+
+  if (hash.includes('#first')) {
+    for (let i = 0; i < filteredRows.length; i++) {
+      const href = getHref(filteredRows[i]);
+      if (href && !isDeleted(href)) {
+        location.href = "https://arca.live" + href;
+        return;
+      }
+    }
+  }
+
+  if (hash.includes('#last')) {
+    for (let i = filteredRows.length - 1; i >= 0; i--) {
+      const href = getHref(filteredRows[i]);
+      if (href && !isDeleted(href)) {
+        location.href = "https://arca.live" + href;
+        return;
+      }
+    }
+  }
+}
 
 function getCurrentPage() {
   const urlParams = new URLSearchParams(window.location.search);
@@ -190,30 +262,4 @@ function updatePageParam(url, newPage) {
 function extractBoardFromUrl(url) {
   const match = url.match(/\/b\/([^/?#]+)/);
   return match ? match[1] : null;
-}
-
-window.addEventListener('DOMContentLoaded', () => {
-  const hash = location.hash;
-  const rows = Array.from(document.querySelectorAll('.vrow.column, .vrow.hybrid'));
-  const filteredRows = rows.filter(row => {
-    const cls = row.className;
-    return !cls.includes('notice') && !cls.includes('filtered') && !cls.includes('notice-unfilter') && !row.href?.includes("#c_");
-  });
-
-  const getHref = (row) => {
-    if (row.matches('a.vrow.column')) {
-      return row.getAttribute('href');
-    } else {
-      const link = row.querySelector('.vrow-inner a.hybrid-bottom');
-      return link?.getAttribute('href') || null;
-    }
-  };
-
-  if (hash === '#first' && filteredRows.length > 0) {
-    const href = getHref(filteredRows[0]);
-    if (href) location.href = "https://arca.live" + href;
-  } else if (hash === '#last' && filteredRows.length > 0) {
-    const href = getHref(filteredRows[filteredRows.length - 1]);
-    if (href) location.href = "https://arca.live" + href;
-  }
-});
+}

@@ -11,7 +11,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           'commentKey',      // 댓글 + 댓글작성
           'likeKey',         // 추천
           'dislikeKey',      // 비추천
-          'bestKey'          // 개념글 페이지 이동
+          'bestKey',         // 개념글 페이지 이동
+          'enabled'          // 활성화 상태
         ],
         (data) => {
           sendResponse({
@@ -24,7 +25,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             commentKey: data.commentKey || 'c',
             likeKey: data.likeKey || 'v',
             dislikeKey: data.dislikeKey || 'f',
-            bestKey: data.bestKey || 'd'
+            bestKey: data.bestKey || 'd',
+            enabled: data.enabled !== false // 기본값 true
           });
         }
       );

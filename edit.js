@@ -2,14 +2,26 @@ document.addEventListener('DOMContentLoaded', () => {
     const keyList = [
       'prevKey', 'nextKey', 'prevPageKey', 'nextPageKey', 'scrollTopKey',
       'writeKey', 'commentKey',
-      'likeKey', 'dislikeKey', 'bestKey'
+      'likeKey', 'dislikeKey', 'bestKey', 'enabled'
     ];
   
     chrome.storage.sync.get(keyList, (data) => {
       keyList.forEach(key => {
         const input = document.getElementById(`${key}Input`);
-        if (input) input.value = data[key] || getDefaultKey(key);
+        if (input) {
+          if (input.type === 'checkbox') {
+            input.checked = data[key] !== false;
+          } else {
+            input.value = data[key] || getDefaultKey(key);
+          }
+        }
       });
+      
+      // 토글 상태 로드 (input type 체크로 통합 처리됨)
+      const toggle = document.getElementById('enabledToggle');
+      if (toggle) {
+        toggle.checked = data.enabled !== false;
+      }
     });
   
     document.getElementById('saveButton').addEventListener('click', () => {
@@ -17,7 +29,13 @@ document.addEventListener('DOMContentLoaded', () => {
       const used = new Set();
   
       for (const key of keyList) {
-        const value = document.getElementById(`${key}Input`).value.trim().toLowerCase();
+        const input = document.getElementById(`${key}Input`);
+        if (input.type === 'checkbox') {
+          newData[key] = input.checked;
+          continue;
+        }
+        
+        const value = input.value.trim().toLowerCase();
         if (!/^[a-z0-9]$/.test(value)) {
           alert('영문 또는 숫자 한 글자로만 설정 가능합니다.');
           return;
